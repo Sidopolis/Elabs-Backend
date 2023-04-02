@@ -1,6 +1,8 @@
 import express from "express"
 import dotenv from "dotenv"
-import mongoose from "mongoose"
+
+import {connectDB} from "./db/connectDB.js"
+import User from "./db/User.js"
 
 dotenv.config()
 
@@ -8,43 +10,62 @@ const app = express()
 app.use(express.json()) 
 
 const PORT = process.env.PORT || 8000
-const MONGO_URL= process.env.MONGO_URL
 
-const connectDB = () => {
-    mongoose.connect(MONGO_URL)
-    .then(() => console.log("MongoDB connected"))
-    .catch(err => console.log(err))
-}
+
+// const connectDB = () => {
+//     mongoose.connect(MONGO_URL)
+//     .then(() => console.log("MongoDB connected"))
+//     .catch(err => console.log(err))
+// }
 
 connectDB()
 
-const logger = (req,res,next) => {
-      console.log(req.url)
-      next()   
+// const logger = (req,res,next) => {
+//       console.log(req.url)
+//       next()   
     
-}
+// }
 
 // app.use(logger)
 
 
-app.get("/", (req, res) => {
-    res.json(req.query)
+app.post("/create", async (req, res) => {
+
+    const name = req.body.name;
+    const age = req.body.age
+
+    if(!name || !age) {
+        return res.status(400).json({
+            msg: "Please provide name and age"
+        })
+    }
+
+    try {
+       const newUser = new User({
+        name,
+        age,
+    });
+
+    User.find
+
+    const user = await newUser.save();
+
+    return res.status(201).json({
+        msg : "User created sucessfully",
+        user
+    });
+     
+   } catch(error) {
+     return res.status(500).json({
+        msg: "Something went wrong"
+     })
+
+   }
 })
 
-app.get("/hello", (req, res) => {
-    res.send("this is the hello page")
+app.get("/users", async (req, res)=> {
+    
 })
-
-app.get("/user/:name/:id", (req, res) => {
-    res.json(req.params)
-})
-
-app.post("/get-user", (req, res) => {
-    const name= req.body.name
-    res.send(`Hello ${name}`)
-})
-
-
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`)
